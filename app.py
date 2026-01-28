@@ -18,24 +18,27 @@ ui.add_head_html("""
   font-family: "Times New Roman", serif;
   font-style: italic;
 }
+body {
+  text-align: center;
+}
 </style>
 """)
 
-# ================== DARK HEADER ==================
+# ================== HEADER ==================
 with ui.element("div").classes(
-    "w-full max-w-5xl mx-auto bg-gray-900 text-white rounded-3xl p-8 mt-6 shadow-lg"
+    "w-full max-w-4xl mx-auto bg-gray-900 text-white rounded-3xl p-8 mt-6 shadow-lg text-center"
 ):
     ui.label("نظام متابعة الطلبيات").classes(
-        "text-4xl font-bold text-center mb-2"
+        "text-4xl font-bold mb-2"
     )
     ui.label("متابعة • تنظيم • سيطرة").classes(
-        "text-center text-gray-300 mb-6"
+        "text-gray-300 mb-6"
     )
 
     search_input = ui.input(
         placeholder="بحث بالعنوان أو رقم الطلب"
     ).classes(
-        "w-full text-center bg-gray-800 text-white rounded-xl"
+        "w-full mx-auto text-center bg-gray-800 text-white rounded-xl"
     )
 
     ui.button(
@@ -45,13 +48,13 @@ with ui.element("div").classes(
         "w-full mt-3 bg-red-600 text-white rounded-xl"
     )
 
-# ================== ACTIVE ORDERS TITLE ==================
+# ================== TITLE ==================
 ui.label("الطلبيات النشطة").classes(
     "text-2xl font-bold text-center mt-10 mb-6"
 )
 
 cards_container = ui.column().classes(
-    "w-full max-w-5xl mx-auto gap-6 px-4"
+    "w-full max-w-4xl mx-auto gap-6 items-center"
 )
 
 # ================== STAGES ==================
@@ -104,13 +107,11 @@ def render_cards(keyword=""):
 
         stages = get_stages(row)
         current_stage = get_current_stage(stages)
-
-        # رقم الصف الحقيقي داخل Google Sheet
-        sheet_row = index + 2
+        sheet_row = index + 2  # الصف الحقيقي في Google Sheet
 
         with cards_container:
             with ui.card().classes(
-                "bg-white rounded-3xl p-6 shadow-md text-center"
+                "w-full bg-white rounded-3xl p-6 shadow-md text-center"
             ):
                 ui.label(row["title"]).classes(
                     "text-xl font-bold mb-1"
@@ -126,17 +127,16 @@ def render_cards(keyword=""):
                     "text-red-700 font-semibold mb-4"
                 )
 
-                # زر تعديل الطلبية (يفتح نفس الصف بالشيت)
-                ui.button(
+                # 🔴 زر تعديل شغال 100%
+                ui.link(
                     "✏️ تعديل الطلبية",
-                    on_click=lambda r=sheet_row: ui.open(
-                        f"{BASE_SHEET_URL}&range=A{r}"
-                    )
+                    f"{BASE_SHEET_URL}&range=A{sheet_row}",
+                    new_tab=True
                 ).classes(
-                    "w-full mb-4 bg-gray-900 text-white rounded-xl"
+                    "block w-full text-center bg-gray-900 text-white rounded-xl py-2 mb-4"
                 )
 
-                with ui.column().classes("gap-3"):
+                with ui.column().classes("gap-3 items-center"):
                     for stage in stages:
                         stage_box(
                             stage["name"],
