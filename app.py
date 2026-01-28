@@ -12,37 +12,70 @@ def load_data():
 
 data = load_data()
 
+# ================== GLOBAL STYLE ==================
+ui.add_head_html("""
+<style>
+* {
+  font-family: "Times New Roman", serif;
+  font-style: italic;
+}
+
+.header-dark {
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: white;
+}
+
+.search-dark input {
+  background-color: #0f172a !important;
+  color: white !important;
+}
+
+.search-dark input::placeholder {
+  color: #cbd5e1;
+}
+
+.order-card {
+  border-radius: 20px;
+}
+
+.stage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+</style>
+""")
+
 # ================== HEADER ==================
-with ui.element("div").classes(
-    "w-full bg-gradient-to-r from-slate-100 to-slate-200 py-12 mb-10 rounded-b-3xl shadow"
-):
-    ui.label("منصة متابعة أوامر الشراء").classes(
-        "text-5xl font-bold italic text-center tracking-wide"
-    )
-    ui.label("Procurement • Tracking • Smart Workflow Control").classes(
-        "text-center text-gray-600 mt-3 italic text-base tracking-wider"
+with ui.element("div").classes("header-dark w-full py-10 px-4"):
+    ui.label("نظام متابعة الطلبيات").classes(
+        "text-4xl font-bold text-center mb-6"
     )
 
-# ================== SEARCH ==================
-with ui.row().classes("w-full gap-3 mb-8 px-6"):
-    search_input = ui.input(
-        placeholder="بحث بالعنوان أو رقم الطلب"
-    ).classes("flex-1 italic text-lg")
+    with ui.row().classes("max-w-3xl mx-auto gap-2"):
+        search_input = ui.input(
+            placeholder="بحث بالعنوان أو رقم الطلب"
+        ).classes("flex-1 search-dark")
 
-    ui.button(
-        "بحث",
-        on_click=lambda: render_cards(search_input.value),
-    ).props("color=primary").classes("italic")
+        ui.button(
+            "بحث",
+            on_click=lambda: render_cards(search_input.value)
+        ).props("color=primary")
 
-    ui.button(
-        "مسح",
-        on_click=lambda: (
-            search_input.set_value(""),
-            render_cards("")
-        ),
-    ).props("outline").classes("italic")
+        ui.button(
+            "مسح",
+            on_click=lambda: (
+                search_input.set_value(""),
+                render_cards("")
+            )
+        ).props("outline")
 
-cards_container = ui.column().classes("w-full gap-8 px-6")
+# ================== SECTION TITLE ==================
+ui.label("الطلبيات النشطة").classes(
+    "text-2xl font-bold px-6 mt-8 mb-4"
+)
+
+cards_container = ui.column().classes("w-full gap-6 px-6 pb-10")
 
 # ================== STAGES ==================
 def get_stages(row):
@@ -54,20 +87,11 @@ def get_stages(row):
             stages.append({"name": name, "date": date})
     return stages
 
-# ================== CURRENT STAGE ==================
 def get_current_stage(stages):
-    if not stages:
-        return ""
-
-    if all(stage["date"] == "" for stage in stages):
-        return stages[0]["name"]
-
-    for i, stage in enumerate(stages):
+    for stage in stages:
         if stage["date"] == "":
-            if i == 0 or stages[i - 1]["date"] != "":
-                return stage["name"]
-
-    return stages[-1]["name"]
+            return stage["name"]
+    return stages[-1]["name"] if stages else ""
 
 # ================== STAGE BOX ==================
 def stage_box(name, date, is_current):
@@ -75,26 +99,20 @@ def stage_box(name, date, is_current):
         color = "bg-emerald-100 text-emerald-800"
         subtitle = date
         icon = "✔"
-
     elif is_current:
-        color = "bg-red-100 text-red-800 scale-105"
-        subtitle = "قيد التنفيذ"
+        color = "bg-red-100 text-red-800"
+        subtitle = "المرحلة الحالية"
         icon = "➤"
-
     else:
         color = "bg-gray-100 text-gray-500"
         subtitle = "بانتظار التنفيذ"
         icon = "○"
 
     with ui.card().classes(
-        f"p-4 w-48 text-center rounded-2xl shadow-sm transition {color}"
+        f"p-3 text-center rounded-xl shadow-sm {color}"
     ):
-        ui.label(f"{icon} {name}").classes(
-            "font-semibold italic text-sm"
-        )
-        ui.label(subtitle).classes(
-            "text-xs italic mt-2"
-        )
+        ui.label(f"{icon} {name}").classes("font-semibold text-sm")
+        ui.label(subtitle).classes("text-xs mt-1")
 
 # ================== OPEN SHEET ==================
 def open_sheet():
@@ -106,7 +124,6 @@ def render_cards(keyword=""):
     keyword = keyword.lower().strip()
 
     for _, row in data.iterrows():
-
         if not row["title"] or not row["order_no"]:
             continue
 
@@ -119,43 +136,37 @@ def render_cards(keyword=""):
 
         with cards_container:
             with ui.card().classes(
-                "w-full p-8 rounded-3xl shadow-md hover:shadow-xl transition"
+                "order-card w-full p-6 shadow-md hover:shadow-xl transition"
             ):
-                with ui.row().classes("justify-between items-start mb-4"):
-                    with ui.column():
-                        ui.label(row["title"]).classes(
-                            "text-2xl font-bold italic"
-                        )
-                        ui.label(
-                            f"القسم: {row['department']}"
-                        ).classes("italic text-gray-600")
-                        ui.label(
-                            f"رقم الطلب: {row['order_no']}"
-                        ).classes("italic text-gray-600")
+                ui.label(row["title"]).classes(
+                    "text-xl font-bold mb-1"
+                )
+                ui.label(f"القسم: {row['department']}").classes(
+                    "text-sm text-gray-600"
+                )
+                ui.label(f"رقم الطلب: {row['order_no']}").classes(
+                    "text-sm text-gray-600"
+                )
 
-                    with ui.column().classes("items-end"):
-                        ui.label(f"➤ {current_stage}").classes(
-                            "italic text-red-700 font-semibold text-lg"
-                        )
-                        ui.button(
-                            "✏️ تعديل الطلبية",
-                            on_click=open_sheet
-                        ).classes(
-                            "mt-2 italic text-sm"
-                        ).props("outline")
+                ui.label(f"➤ {current_stage}").classes(
+                    "text-red-700 font-semibold mt-2"
+                )
 
-                ui.separator().classes("my-6")
+                ui.button(
+                    "✏️ تعديل الطلبية",
+                    on_click=open_sheet
+                ).classes("mt-3").props("outline")
 
-                with ui.row().classes("gap-4 flex-wrap"):
+                ui.separator().classes("my-4")
+
+                with ui.element("div").classes("stage-grid"):
                     for stage in stages:
                         stage_box(
                             stage["name"],
                             stage["date"],
-                            stage["name"] == current_stage,
+                            stage["name"] == current_stage
                         )
 
 # ================== INIT ==================
 render_cards()
-ui.run(host="0.0.0.0", port=8080)
-
-
+ui.run()
