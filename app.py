@@ -1,11 +1,10 @@
 from nicegui import ui
 import pandas as pd
-import webbrowser
 
 # ================== Google Sheet ==================
 SHEET_ID = "1WQWL2aRzD5lvqVgUzXNi_B2poEV8YCUBOd60sRnfy1Q"
 CSV_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv"
-SHEET_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/edit"
+BASE_SHEET_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/edit#gid=0"
 
 def load_data():
     return pd.read_csv(CSV_URL).fillna("")
@@ -19,63 +18,41 @@ ui.add_head_html("""
   font-family: "Times New Roman", serif;
   font-style: italic;
 }
-
-.header-dark {
-  background: linear-gradient(135deg, #0f172a, #1e293b);
-  color: white;
-}
-
-.search-dark input {
-  background-color: #0f172a !important;
-  color: white !important;
-}
-
-.search-dark input::placeholder {
-  color: #cbd5e1;
-}
-
-.order-card {
-  border-radius: 20px;
-}
-
-.stage-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 12px;
-}
 </style>
 """)
 
-# ================== HEADER ==================
-with ui.element("div").classes("header-dark w-full py-10 px-4"):
+# ================== DARK HEADER ==================
+with ui.element("div").classes(
+    "w-full max-w-5xl mx-auto bg-gray-900 text-white rounded-3xl p-8 mt-6 shadow-lg"
+):
     ui.label("نظام متابعة الطلبيات").classes(
-        "text-4xl font-bold text-center mb-6"
+        "text-4xl font-bold text-center mb-2"
+    )
+    ui.label("متابعة • تنظيم • سيطرة").classes(
+        "text-center text-gray-300 mb-6"
     )
 
-    with ui.row().classes("max-w-3xl mx-auto gap-2"):
-        search_input = ui.input(
-            placeholder="بحث بالعنوان أو رقم الطلب"
-        ).classes("flex-1 search-dark")
+    search_input = ui.input(
+        placeholder="بحث بالعنوان أو رقم الطلب"
+    ).classes(
+        "w-full text-center bg-gray-800 text-white rounded-xl"
+    )
 
-        ui.button(
-            "بحث",
-            on_click=lambda: render_cards(search_input.value)
-        ).props("color=primary")
+    ui.button(
+        "بحث",
+        on_click=lambda: render_cards(search_input.value)
+    ).classes(
+        "w-full mt-3 bg-red-600 text-white rounded-xl"
+    )
 
-        ui.button(
-            "مسح",
-            on_click=lambda: (
-                search_input.set_value(""),
-                render_cards("")
-            )
-        ).props("outline")
-
-# ================== SECTION TITLE ==================
+# ================== ACTIVE ORDERS TITLE ==================
 ui.label("الطلبيات النشطة").classes(
-    "text-2xl font-bold px-6 mt-8 mb-4"
+    "text-2xl font-bold text-center mt-10 mb-6"
 )
 
-cards_container = ui.column().classes("w-full gap-6 px-6 pb-10")
+cards_container = ui.column().classes(
+    "w-full max-w-5xl mx-auto gap-6 px-4"
+)
 
 # ================== STAGES ==================
 def get_stages(row):
@@ -88,9 +65,9 @@ def get_stages(row):
     return stages
 
 def get_current_stage(stages):
-    for stage in stages:
-        if stage["date"] == "":
-            return stage["name"]
+    for s in stages:
+        if not s["date"]:
+            return s["name"]
     return stages[-1]["name"] if stages else ""
 
 # ================== STAGE BOX ==================
@@ -98,32 +75,26 @@ def stage_box(name, date, is_current):
     if date:
         color = "bg-emerald-100 text-emerald-800"
         subtitle = date
-        icon = "✔"
     elif is_current:
         color = "bg-red-100 text-red-800"
-        subtitle = "المرحلة الحالية"
-        icon = "➤"
+        subtitle = "قيد التنفيذ"
     else:
         color = "bg-gray-100 text-gray-500"
         subtitle = "بانتظار التنفيذ"
-        icon = "○"
 
     with ui.card().classes(
-        f"p-3 text-center rounded-xl shadow-sm {color}"
+        f"w-full text-center p-4 rounded-2xl {color}"
     ):
-        ui.label(f"{icon} {name}").classes("font-semibold text-sm")
-        ui.label(subtitle).classes("text-xs mt-1")
-
-# ================== OPEN SHEET ==================
-def open_sheet():
-    webbrowser.open_new_tab(SHEET_URL)
+        ui.label(name).classes("font-bold")
+        ui.label(subtitle).classes("text-sm mt-1")
 
 # ================== CARDS ==================
 def render_cards(keyword=""):
     cards_container.clear()
     keyword = keyword.lower().strip()
 
-    for _, row in data.iterrows():
+    for index, row in data.iterrows():
+
         if not row["title"] or not row["order_no"]:
             continue
 
@@ -134,32 +105,38 @@ def render_cards(keyword=""):
         stages = get_stages(row)
         current_stage = get_current_stage(stages)
 
+        # رقم الصف الحقيقي داخل Google Sheet
+        sheet_row = index + 2
+
         with cards_container:
             with ui.card().classes(
-                "order-card w-full p-6 shadow-md hover:shadow-xl transition"
+                "bg-white rounded-3xl p-6 shadow-md text-center"
             ):
                 ui.label(row["title"]).classes(
                     "text-xl font-bold mb-1"
                 )
                 ui.label(f"القسم: {row['department']}").classes(
-                    "text-sm text-gray-600"
+                    "text-gray-600"
                 )
                 ui.label(f"رقم الطلب: {row['order_no']}").classes(
-                    "text-sm text-gray-600"
+                    "text-gray-600 mb-3"
                 )
 
-                ui.label(f"➤ {current_stage}").classes(
-                    "text-red-700 font-semibold mt-2"
+                ui.label(f"الحالة الحالية: {current_stage}").classes(
+                    "text-red-700 font-semibold mb-4"
                 )
 
+                # زر تعديل الطلبية (يفتح نفس الصف بالشيت)
                 ui.button(
                     "✏️ تعديل الطلبية",
-                    on_click=open_sheet
-                ).classes("mt-3").props("outline")
+                    on_click=lambda r=sheet_row: ui.open(
+                        f"{BASE_SHEET_URL}&range=A{r}"
+                    )
+                ).classes(
+                    "w-full mb-4 bg-gray-900 text-white rounded-xl"
+                )
 
-                ui.separator().classes("my-4")
-
-                with ui.element("div").classes("stage-grid"):
+                with ui.column().classes("gap-3"):
                     for stage in stages:
                         stage_box(
                             stage["name"],
