@@ -12,6 +12,18 @@ def load_data():
 
 data = load_data()
 
+# ================== COLORS ==================
+CARD_COLORS = [
+    "bg-sky-50",
+    "bg-emerald-50",
+    "bg-amber-50",
+    "bg-rose-50",
+    "bg-violet-50",
+    "bg-cyan-50",
+    "bg-lime-50",
+    "bg-orange-50",
+]
+
 # ================== GLOBAL STYLE ==================
 ui.add_head_html("""
 <style>
@@ -19,32 +31,46 @@ ui.add_head_html("""
     font-family: "Times New Roman", serif;
     font-style: italic;
 }
+
+.btn-main {
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    color: white;
+    border-radius: 9999px;
+    padding: 14px 28px;
+    font-weight: 800;
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #334155, #1e293b);
+    color: white;
+    border-radius: 9999px;
+    padding: 14px 28px;
+    font-weight: 700;
+}
 </style>
 """)
 
 # ================== HEADER ==================
-with ui.element("div").classes(
+with ui.column().classes(
     "w-full bg-gradient-to-b from-slate-800 to-slate-900 text-white "
-    "py-10 mb-10 rounded-b-3xl shadow flex flex-col items-center text-center"
+    "py-10 mb-10 rounded-b-3xl shadow items-center text-center"
 ):
-    ui.label("نظام متابعة الطلبيات").classes(
-        "text-4xl font-bold mb-2"
-    )
-    ui.label("متابعة • تنظيم • سيطرة").classes(
-        "text-sm text-gray-300"
-    )
+    ui.label("نظام متابعة الطلبيات").classes("text-4xl font-bold mb-2")
+    ui.label("متابعة • تنظيم • سيطرة").classes("text-sm text-gray-300")
 
 # ================== SEARCH ==================
-with ui.column().classes("w-full max-w-xl mx-auto px-4 mb-10 items-center"):
+with ui.column().classes(
+    "w-full max-w-xl mx-auto px-4 mb-10 items-center text-center"
+):
     search_input = ui.input(
-        placeholder="🔍 بحث بعنوان الطلب أو رقم الطلب"
+        placeholder="بحث بعنوان الطلب أو رقم الطلب"
     ).classes("w-full text-center text-lg")
 
     with ui.row().classes("gap-4 mt-4 justify-center"):
         ui.button(
             "بحث",
             on_click=lambda: render_cards(search_input.value)
-        ).props("color=primary")
+        ).classes("btn-main")
 
         ui.button(
             "مسح",
@@ -52,7 +78,7 @@ with ui.column().classes("w-full max-w-xl mx-auto px-4 mb-10 items-center"):
                 search_input.set_value(""),
                 render_cards("")
             )
-        ).props("outline")
+        ).classes("btn-secondary")
 
 cards_container = ui.column().classes(
     "w-full max-w-xl mx-auto px-4 gap-10 items-center"
@@ -61,7 +87,7 @@ cards_container = ui.column().classes(
 # ================== STAGES ==================
 def get_stages(row):
     stages = []
-    for i in range(1, 8):
+    for i in range(1, 10):
         name = row.get(f"stage_{i}_name", "")
         date = row.get(f"stage_{i}_date", "")
         if name:
@@ -77,37 +103,20 @@ def get_current_stage(stages):
 # ================== STAGE BOX ==================
 def stage_box(name, date, is_current):
     if date:
-        color = "bg-emerald-100 text-emerald-800"
+        color = "bg-emerald-100 text-emerald-900"
         subtitle = date
-        icon = "✔"
     elif is_current:
-        color = "bg-red-100 text-red-800"
+        color = "bg-sky-100 text-sky-900"
         subtitle = "قيد التنفيذ"
-        icon = "➤"
     else:
-        color = "bg-gray-100 text-gray-500"
+        color = "bg-gray-100 text-gray-700"
         subtitle = "بانتظار التنفيذ"
-        icon = "○"
 
     with ui.card().classes(
-        f"""
-        w-full
-        rounded-2xl
-        shadow
-        p-6
-        flex flex-col
-        items-center
-        justify-center
-        text-center
-        {color}
-        """
+        f"w-full rounded-2xl shadow p-6 text-center {color}"
     ):
-        ui.label(f"{icon} {name}").classes(
-            "font-bold text-lg"
-        )
-        ui.label(subtitle).classes(
-            "text-sm mt-2"
-        )
+        ui.label(name).classes("font-bold text-lg")
+        ui.label(subtitle).classes("text-sm mt-2 font-semibold")
 
 # ================== OPEN SHEET ==================
 def open_sheet():
@@ -117,6 +126,7 @@ def open_sheet():
 def render_cards(keyword=""):
     cards_container.clear()
     keyword = keyword.lower().strip()
+    index = 0
 
     for _, row in data.iterrows():
 
@@ -127,45 +137,61 @@ def render_cards(keyword=""):
         if keyword and keyword not in searchable:
             continue
 
+        card_color = CARD_COLORS[index % len(CARD_COLORS)]
+        index += 1
+
         stages = get_stages(row)
         current_stage = get_current_stage(stages)
 
         with cards_container:
             with ui.card().classes(
-                "w-full bg-white rounded-3xl shadow-xl p-6 "
-                "flex flex-col items-center text-center"
+                f"""
+                w-full
+                rounded-3xl
+                shadow-xl
+                p-8
+                flex flex-col
+                items-center
+                text-center
+                {card_color}
+                """
             ):
-                # ===== INFO =====
-                ui.label(row["title"]).classes(
-                    "text-2xl font-bold mb-2"
-                )
-                ui.label(f"القسم: {row['department']}").classes(
-                    "text-gray-600"
-                )
+                ui.label(row["title"]).classes("text-2xl font-bold mb-2")
+                ui.label(f"القسم: {row['department']}").classes("text-gray-700")
                 ui.label(f"رقم الطلب: {row['order_no']}").classes(
-                    "text-gray-600 mb-4"
+                    "text-gray-700 mb-4"
                 )
 
-                ui.label(f"الحالة الحالية: {current_stage}").classes(
-                    "text-red-700 font-semibold mb-6"
+                ui.label(
+                    f"الحالة الحالية: {current_stage}"
+                ).classes(
+                    "text-sky-800 font-bold mb-6"
                 )
 
                 ui.button(
-                    "✏️ تعديل الطلبية",
+                    "تعديل الطلبية",
                     on_click=open_sheet
-                ).classes(
-                    "w-full max-w-sm mb-8"
-                ).props("outline")
+                ).classes("btn-main w-full max-w-sm mb-4")
 
-                # ===== STAGES =====
-                with ui.column().classes(
+                details_container = ui.column().classes(
                     "w-full gap-4 items-center"
-                ):
+                )
+                details_container.visible = False
+
+                def toggle(dc=details_container):
+                    dc.visible = not dc.visible
+
+                ui.button(
+                    "تفاصيل مراحل الطلبية",
+                    on_click=toggle
+                ).classes("btn-secondary w-full max-w-sm mb-6")
+
+                with details_container:
                     for stage in stages:
                         stage_box(
                             stage["name"],
                             stage["date"],
-                            stage["name"] == current_stage,
+                            stage["name"] == current_stage
                         )
 
 # ================== INIT ==================
