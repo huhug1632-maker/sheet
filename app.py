@@ -156,4 +156,6 @@ def render_cards(keyword=""):
 
 # ================== INIT ==================
 render_cards()
-ui.run()
+ui.run(host="0.0.0.0", port=8080)
+
+
