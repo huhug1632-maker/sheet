@@ -12,37 +12,51 @@ def load_data():
 
 data = load_data()
 
+# ================== GLOBAL STYLE ==================
+ui.add_head_html("""
+<style>
+* {
+    font-family: "Times New Roman", serif;
+    font-style: italic;
+}
+</style>
+""")
+
 # ================== HEADER ==================
 with ui.element("div").classes(
-    "w-full flex flex-col items-center bg-gradient-to-r from-slate-900 to-slate-800 py-10 mb-8 rounded-b-3xl shadow"
+    "w-full bg-gradient-to-b from-slate-800 to-slate-900 text-white "
+    "py-10 mb-10 rounded-b-3xl shadow flex flex-col items-center text-center"
 ):
     ui.label("نظام متابعة الطلبيات").classes(
-        "text-4xl font-bold italic text-white text-center"
+        "text-4xl font-bold mb-2"
     )
-    ui.label("متابعة • مراقبة • سيطرة ذكية").classes(
-        "text-gray-300 mt-2 italic text-center"
+    ui.label("متابعة • تنظيم • سيطرة").classes(
+        "text-sm text-gray-300"
     )
 
 # ================== SEARCH ==================
-with ui.column().classes("w-full max-w-md mx-auto gap-3 mb-6 px-4 items-center"):
+with ui.column().classes("w-full max-w-xl mx-auto px-4 mb-10 items-center"):
     search_input = ui.input(
-        placeholder="🔍 بحث بعنوان الطلب أو رقمه"
-    ).classes("w-full italic text-center")
+        placeholder="🔍 بحث بعنوان الطلب أو رقم الطلب"
+    ).classes("w-full text-center text-lg")
 
-    ui.button(
-        "بحث",
-        on_click=lambda: render_cards(search_input.value),
-    ).classes("w-full italic").props("color=primary")
+    with ui.row().classes("gap-4 mt-4 justify-center"):
+        ui.button(
+            "بحث",
+            on_click=lambda: render_cards(search_input.value)
+        ).props("color=primary")
 
-    ui.button(
-        "مسح",
-        on_click=lambda: (
-            search_input.set_value(""),
-            render_cards("")
-        ),
-    ).classes("w-full italic").props("outline")
+        ui.button(
+            "مسح",
+            on_click=lambda: (
+                search_input.set_value(""),
+                render_cards("")
+            )
+        ).props("outline")
 
-cards_container = ui.column().classes("w-full gap-6 px-4")
+cards_container = ui.column().classes(
+    "w-full max-w-xl mx-auto px-4 gap-10 items-center"
+)
 
 # ================== STAGES ==================
 def get_stages(row):
@@ -54,17 +68,11 @@ def get_stages(row):
             stages.append({"name": name, "date": date})
     return stages
 
-# ================== CURRENT STAGE ==================
 def get_current_stage(stages):
-    if not stages:
-        return ""
-    if all(stage["date"] == "" for stage in stages):
-        return stages[0]["name"]
-    for i, stage in enumerate(stages):
+    for stage in stages:
         if stage["date"] == "":
-            if i == 0 or stages[i - 1]["date"] != "":
-                return stage["name"]
-    return stages[-1]["name"]
+            return stage["name"]
+    return stages[-1]["name"] if stages else ""
 
 # ================== STAGE BOX ==================
 def stage_box(name, date, is_current):
@@ -73,7 +81,7 @@ def stage_box(name, date, is_current):
         subtitle = date
         icon = "✔"
     elif is_current:
-        color = "bg-red-100 text-red-800 scale-105"
+        color = "bg-red-100 text-red-800"
         subtitle = "قيد التنفيذ"
         icon = "➤"
     else:
@@ -82,10 +90,24 @@ def stage_box(name, date, is_current):
         icon = "○"
 
     with ui.card().classes(
-        f"p-4 w-full rounded-2xl shadow text-center {color}"
+        f"""
+        w-full
+        rounded-2xl
+        shadow
+        p-6
+        flex flex-col
+        items-center
+        justify-center
+        text-center
+        {color}
+        """
     ):
-        ui.label(f"{icon} {name}").classes("font-semibold italic")
-        ui.label(subtitle).classes("text-sm italic mt-2")
+        ui.label(f"{icon} {name}").classes(
+            "font-bold text-lg"
+        )
+        ui.label(subtitle).classes(
+            "text-sm mt-2"
+        )
 
 # ================== OPEN SHEET ==================
 def open_sheet():
@@ -97,6 +119,7 @@ def render_cards(keyword=""):
     keyword = keyword.lower().strip()
 
     for _, row in data.iterrows():
+
         if not row["title"] or not row["order_no"]:
             continue
 
@@ -109,28 +132,35 @@ def render_cards(keyword=""):
 
         with cards_container:
             with ui.card().classes(
-                "w-full max-w-md mx-auto bg-white rounded-3xl p-6 shadow-md flex flex-col items-center text-center"
+                "w-full bg-white rounded-3xl shadow-xl p-6 "
+                "flex flex-col items-center text-center"
             ):
+                # ===== INFO =====
                 ui.label(row["title"]).classes(
-                    "text-2xl font-bold italic"
+                    "text-2xl font-bold mb-2"
                 )
-                ui.label(f"القسم: {row['department']}").classes("italic text-gray-600 mt-1")
-                ui.label(f"رقم الطلب: {row['order_no']}").classes("italic text-gray-600")
+                ui.label(f"القسم: {row['department']}").classes(
+                    "text-gray-600"
+                )
+                ui.label(f"رقم الطلب: {row['order_no']}").classes(
+                    "text-gray-600 mb-4"
+                )
 
                 ui.label(f"الحالة الحالية: {current_stage}").classes(
-                    "italic text-red-700 font-semibold mt-3"
+                    "text-red-700 font-semibold mb-6"
                 )
 
                 ui.button(
                     "✏️ تعديل الطلبية",
                     on_click=open_sheet
                 ).classes(
-                    "mt-4 w-full italic"
+                    "w-full max-w-sm mb-8"
                 ).props("outline")
 
-                ui.separator().classes("my-4 w-full")
-
-                with ui.column().classes("w-full gap-3"):
+                # ===== STAGES =====
+                with ui.column().classes(
+                    "w-full gap-4 items-center"
+                ):
                     for stage in stages:
                         stage_box(
                             stage["name"],
