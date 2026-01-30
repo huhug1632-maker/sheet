@@ -1,6 +1,5 @@
 from nicegui import ui
 import pandas as pd
-import webbrowser
 
 # ================== Google Sheet ==================
 SHEET_ID = "1WQWL2aRzD5lvqVgUzXNi_B2poEV8YCUBOd60sRnfy1Q"
@@ -120,10 +119,13 @@ def stage_box(name, date, is_current):
 
 # ================== OPEN SHEET ==================
 def open_sheet():
-    webbrowser.open_new_tab(SHEET_URL)
+    ui.open(SHEET_URL)
 
 # ================== CARDS ==================
 def render_cards(keyword=""):
+    global data
+    data = load_data()
+
     cards_container.clear()
     keyword = keyword.lower().strip()
     index = 0
