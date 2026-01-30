@@ -28,6 +28,9 @@ ui.add_head_html("""
     font-style: italic;
     text-align: center;
 }
+a {
+    text-decoration: none;
+}
 </style>
 """)
 
@@ -42,14 +45,6 @@ with ui.column().classes(
 cards_container = ui.column().classes(
     "w-full max-w-xl mx-auto px-4 gap-10 items-center justify-center"
 )
-
-# ================== OPEN ROW (RAILWAY SAFE) ==================
-def open_row(row_number: int):
-    url = (
-        f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/edit"
-        f"#gid=0&range=A{row_number}"
-    )
-    ui.open(url, new_tab=True)
 
 # ================== STAGES ==================
 def get_stages(row):
@@ -112,7 +107,12 @@ def render_cards():
         stages = get_stages(row)
         current_stage = get_current_stage(stages)
 
-        sheet_row_number = idx + 2  # مهم جداً
+        sheet_row_number = idx + 2  # رقم الصف الحقيقي في Google Sheet
+
+        edit_url = (
+            f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/edit"
+            f"#gid=0&range=A{sheet_row_number}"
+        )
 
         with cards_container:
             with ui.card().classes(
@@ -130,13 +130,14 @@ def render_cards():
                     f"الحالة الحالية: {current_stage}"
                 ).classes("text-red-700 font-bold mb-6")
 
-                # ===== EDIT BUTTON =====
-                ui.button(
+                # ===== EDIT LINK (RAILWAY SAFE) =====
+                ui.link(
                     "تعديل الطلبية",
-                    on_click=lambda r=sheet_row_number: open_row(r),
-                    color="black"
-                ).props("unelevated").classes(
-                    "w-full max-w-sm mb-4 text-white text-lg font-bold rounded-full"
+                    edit_url,
+                    new_tab=True
+                ).classes(
+                    "w-full max-w-sm mb-4 text-white text-lg font-bold "
+                    "rounded-full bg-black py-3"
                 )
 
                 # ===== DETAILS =====
