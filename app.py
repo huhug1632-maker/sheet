@@ -9,8 +9,6 @@ SHEET_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/edit"
 def load_data():
     return pd.read_csv(CSV_URL).fillna("")
 
-data = load_data()
-
 # ================== COLORS ==================
 CARD_COLORS = [
     "bg-sky-50",
@@ -33,15 +31,17 @@ ui.add_head_html("""
 
 .btn-main {
     background: linear-gradient(135deg, #1e293b, #0f172a);
-    color: white;
+    color: white !important;
     border-radius: 9999px;
     padding: 14px 28px;
     font-weight: 800;
+    text-decoration: none !important;
+    display: block;
 }
 
 .btn-secondary {
     background: linear-gradient(135deg, #334155, #1e293b);
-    color: white;
+    color: white !important;
     border-radius: 9999px;
     padding: 14px 28px;
     font-weight: 700;
@@ -117,15 +117,9 @@ def stage_box(name, date, is_current):
         ui.label(name).classes("font-bold text-lg")
         ui.label(subtitle).classes("text-sm mt-2 font-semibold")
 
-# ================== OPEN SHEET ==================
-def open_sheet():
-    ui.open(SHEET_URL)
-
 # ================== CARDS ==================
 def render_cards(keyword=""):
-    global data
     data = load_data()
-
     cards_container.clear()
     keyword = keyword.lower().strip()
     index = 0
@@ -148,13 +142,8 @@ def render_cards(keyword=""):
         with cards_container:
             with ui.card().classes(
                 f"""
-                w-full
-                rounded-3xl
-                shadow-xl
-                p-8
-                flex flex-col
-                items-center
-                text-center
+                w-full rounded-3xl shadow-xl p-8
+                flex flex-col items-center text-center
                 {card_color}
                 """
             ):
@@ -170,9 +159,11 @@ def render_cards(keyword=""):
                     "text-sky-800 font-bold mb-6"
                 )
 
-                ui.button(
+                # ✅ زر تعديل (مضمون)
+                ui.link(
                     "تعديل الطلبية",
-                    on_click=open_sheet
+                    SHEET_URL,
+                    new_tab=True
                 ).classes("btn-main w-full max-w-sm mb-4")
 
                 details_container = ui.column().classes(
@@ -199,3 +190,4 @@ def render_cards(keyword=""):
 # ================== INIT ==================
 render_cards()
 ui.run()
+
