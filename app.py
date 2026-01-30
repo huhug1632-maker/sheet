@@ -1,6 +1,5 @@
 from nicegui import ui
 import pandas as pd
-import webbrowser
 
 # ================== Google Sheet ==================
 SHEET_ID = "1WQWL2aRzD5lvqVgUzXNi_B2poEV8YCUBOd60sRnfy1Q"
@@ -44,13 +43,13 @@ cards_container = ui.column().classes(
     "w-full max-w-xl mx-auto px-4 gap-10 items-center justify-center"
 )
 
-# ================== OPEN ROW (FIXED) ==================
+# ================== OPEN ROW (RAILWAY SAFE) ==================
 def open_row(row_number: int):
     url = (
         f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/edit"
         f"#gid=0&range=A{row_number}"
     )
-    webbrowser.open_new_tab(url)
+    ui.open(url, new_tab=True)
 
 # ================== STAGES ==================
 def get_stages(row):
@@ -131,7 +130,7 @@ def render_cards():
                     f"الحالة الحالية: {current_stage}"
                 ).classes("text-red-700 font-bold mb-6")
 
-                # ===== EDIT BUTTON (FIXED 100%) =====
+                # ===== EDIT BUTTON =====
                 ui.button(
                     "تعديل الطلبية",
                     on_click=lambda r=sheet_row_number: open_row(r),
