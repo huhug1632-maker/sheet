@@ -44,6 +44,14 @@ cards_container = ui.column().classes(
     "w-full max-w-xl mx-auto px-4 gap-10 items-center justify-center"
 )
 
+# ================== OPEN ROW (FIXED) ==================
+def open_row(row_number: int):
+    url = (
+        f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/edit"
+        f"#gid=0&range=A{row_number}"
+    )
+    webbrowser.open_new_tab(url)
+
 # ================== STAGES ==================
 def get_stages(row):
     stages = []
@@ -81,14 +89,8 @@ def stage_box(name, date, is_current):
 
     with ui.card().classes(
         f"""
-        w-full
-        rounded-2xl
-        shadow
-        p-5
-        flex flex-col
-        items-center
-        justify-center
-        text-center
+        w-full rounded-2xl shadow p-5
+        flex flex-col items-center justify-center text-center
         {color}
         """
     ):
@@ -111,17 +113,13 @@ def render_cards():
         stages = get_stages(row)
         current_stage = get_current_stage(stages)
 
+        sheet_row_number = idx + 2  # مهم جداً
+
         with cards_container:
             with ui.card().classes(
                 f"""
-                w-full
-                rounded-3xl
-                shadow-xl
-                p-8
-                flex flex-col
-                items-center
-                justify-center
-                text-center
+                w-full rounded-3xl shadow-xl p-8
+                flex flex-col items-center justify-center text-center
                 {card_color}
                 """
             ):
@@ -133,12 +131,10 @@ def render_cards():
                     f"الحالة الحالية: {current_stage}"
                 ).classes("text-red-700 font-bold mb-6")
 
-                # ===== EDIT BUTTON =====
+                # ===== EDIT BUTTON (FIXED 100%) =====
                 ui.button(
                     "تعديل الطلبية",
-                    on_click=lambda r=idx + 2: webbrowser.open_new_tab(
-                        f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/edit#gid=0&range=A{r}"
-                    ),
+                    on_click=lambda r=sheet_row_number: open_row(r),
                     color="black"
                 ).props("unelevated").classes(
                     "w-full max-w-sm mb-4 text-white text-lg font-bold rounded-full"
