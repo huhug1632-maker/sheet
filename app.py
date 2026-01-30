@@ -37,10 +37,30 @@ a {
 # ================== HEADER ==================
 with ui.column().classes(
     "w-full bg-gradient-to-b from-slate-800 to-slate-900 text-white "
-    "py-10 mb-10 rounded-b-3xl shadow items-center justify-center text-center"
+    "py-10 mb-10 rounded-b-3xl shadow items-center justify-center"
 ):
     ui.label("نظام متابعة الطلبيات").classes("text-4xl font-bold mb-2")
     ui.label("متابعة • تنظيم • سيطرة").classes("text-sm text-gray-300")
+
+# ================== SEARCH BAR (رجعناه) ==================
+with ui.column().classes("w-full max-w-xl mx-auto px-4 mb-10 items-center"):
+    search_input = ui.input(
+        placeholder="بحث بعنوان الطلب أو رقم الطلب"
+    ).classes("w-full text-center text-lg")
+
+    with ui.row().classes("gap-4 mt-4 justify-center"):
+        ui.button(
+            "بحث",
+            on_click=lambda: render_cards(search_input.value)
+        ).classes("bg-black text-white px-8 py-2 rounded-full font-bold")
+
+        ui.button(
+            "مسح",
+            on_click=lambda: (
+                search_input.set_value(""),
+                render_cards("")
+            )
+        ).classes("bg-gray-400 text-white px-8 py-2 rounded-full font-bold")
 
 cards_container = ui.column().classes(
     "w-full max-w-xl mx-auto px-4 gap-10 items-center justify-center"
@@ -60,7 +80,6 @@ def get_stages(row):
             "name": row.get("receive"),
             "date": row.get("receive_date", "")
         })
-
     return stages
 
 def get_current_stage(stages):
@@ -82,18 +101,15 @@ def stage_box(name, date, is_current):
         subtitle = "بانتظار التنفيذ"
 
     with ui.card().classes(
-        f"""
-        w-full rounded-2xl shadow p-5
-        flex flex-col items-center justify-center text-center
-        {color}
-        """
+        f"w-full rounded-2xl shadow p-5 flex flex-col items-center {color}"
     ):
         ui.label(name).classes("font-bold text-lg")
         ui.label(subtitle).classes("text-sm mt-2 font-semibold")
 
 # ================== CARDS ==================
-def render_cards():
+def render_cards(keyword=""):
     cards_container.clear()
+    keyword = keyword.lower().strip()
     index = 0
 
     for idx, row in data.iterrows():
@@ -101,13 +117,16 @@ def render_cards():
         if not row["title"] or not row["order_no"]:
             continue
 
+        searchable = f"{row['title']} {row['order_no']}".lower()
+        if keyword and keyword not in searchable:
+            continue
+
         card_color = CARD_COLORS[index % len(CARD_COLORS)]
         index += 1
 
         stages = get_stages(row)
         current_stage = get_current_stage(stages)
-
-        sheet_row_number = idx + 2  # رقم الصف الحقيقي في Google Sheet
+        sheet_row_number = idx + 2
 
         edit_url = (
             f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/edit"
@@ -130,14 +149,14 @@ def render_cards():
                     f"الحالة الحالية: {current_stage}"
                 ).classes("text-red-700 font-bold mb-6")
 
-                # ===== EDIT LINK (RAILWAY SAFE) =====
+                # ===== EDIT =====
                 ui.link(
                     "تعديل الطلبية",
                     edit_url,
                     new_tab=True
                 ).classes(
                     "w-full max-w-sm mb-4 text-white text-lg font-bold "
-                    "rounded-full bg-black py-3"
+                    "rounded-full bg-black py-4"
                 )
 
                 # ===== DETAILS =====
@@ -151,7 +170,7 @@ def render_cards():
                     on_click=lambda dc=details_container: setattr(dc, "visible", not dc.visible),
                     color="teal"
                 ).props("unelevated").classes(
-                    "w-full max-w-sm mb-6 text-white text-lg font-bold rounded-full"
+                    "w-full max-w-sm mb-6 text-white text-lg font-bold rounded-full py-4"
                 )
 
                 with details_container:
